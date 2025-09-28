@@ -31,18 +31,39 @@ const Contact = () => {
     e.preventDefault();
     setLoading(true);
 
+    const SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+    const TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+    const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+    if (import.meta.env.DEV) {
+      // Debug only in dev: verify envs are loaded
+      // Values should NOT be undefined
+      console.log("[EmailJS env]", {
+        VITE_EMAILJS_SERVICE_ID: SERVICE_ID,
+        VITE_EMAILJS_TEMPLATE_ID: TEMPLATE_ID,
+        VITE_EMAILJS_PUBLIC_KEY: PUBLIC_KEY,
+      });
+    }
+
+    if (!SERVICE_ID || !TEMPLATE_ID || !PUBLIC_KEY) {
+      console.error("Missing EmailJS environment variables. Check .env");
+      alert("Email service is not configured. Please contact me directly at udayc7062@gmail.com.");
+      setLoading(false);
+      return;
+    }
+
     emailjs
       .send(
-        'service_h4lc2jq',
-        'template_zv55qoc',
+        SERVICE_ID,
+        TEMPLATE_ID,
         {
           from_name: form.name,
-          to_name: "Ankit Deshmukh",
+          to_name: "Uday Kiran Reddy Cheerla",
           from_email: form.email,
-          to_email: "deshmukhankit678@gmail.com",
+          to_email: "udayc7062@gmail.com",
           message: form.message,
         },
-        'U9hxNrRfKTQGHqiIp'
+        PUBLIC_KEY
       )
       .then(
         () => {
@@ -57,9 +78,11 @@ const Contact = () => {
         },
         (error) => {
           setLoading(false);
-          console.error(error);
-
-          alert("Ahh, something went wrong. Please try again.");
+          console.error("EmailJS error:", error);
+          const mailto = `mailto:udayc7062@gmail.com?subject=Portfolio%20Contact%20from%20${encodeURIComponent(form.name)}&body=${encodeURIComponent(form.message + "\n\nReply to: " + form.email)}`;
+          // Fallback: open user's email client (new tab is more reliable with some browsers)
+          window.open(mailto, '_blank');
+          alert("I couldn't send via email service, opening your email client instead.");
         }
       );
   };
@@ -98,7 +121,7 @@ const Contact = () => {
               name='email'
               value={form.email}
               onChange={handleChange}
-              placeholder="What's your web address?"
+              placeholder="What's your email?"
               className='bg-tertiary py-4 px-6 placeholder:text-secondary text-white rounded-lg outline-none border-none font-medium'
             />
           </label>
